@@ -75,3 +75,24 @@ input[type="text"] {
     background-color: #6c757d;
 }
 #historyBtn:hover { background-color: #545b62; }
+
+#historyBtn {
+    width: 100%;
+    margin-top: 10px;
+    background-color: #6c757d;
+}
+
+/* New Clear Button Style */
+#clearHistoryBtn {
+    width: 100%;
+    margin-top: 5px;       /* Small gap */
+    background-color: transparent;
+    color: #dc3545;        /* Red text */
+    border: 1px solid #dc3545;
+    font-size: 0.9em;
+}
+
+#clearHistoryBtn:hover {
+    background-color: #dc3545;
+    color: white;
+}

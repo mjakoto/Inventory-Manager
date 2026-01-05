@@ -1,11 +1,7 @@
-// Load current items immediately when page opens
 window.onload = function() {
     loadItems();
 };
 
-// --- CORE FUNCTIONS ---
-
-// 1. Load the main inventory list
 async function loadItems() {
     let response = await fetch('/api/data');
     let data = await response.json();
@@ -16,35 +12,32 @@ async function loadItems() {
     data.items.forEach(item => {
         let li = document.createElement('li');
         
-        // We added a container for the buttons to keep them tidy
+        // Notice we now pass item.id AND item.name to the functions
+        // item is now an object: {id: 1, name: "Apple"}
         li.innerHTML = `
-            <span>${item}</span>
+            <span>${item.name}</span>
             <div class="actions">
-                <button class="edit" onclick="editItem('${item}')">Edit</button>
-                <button class="delete" onclick="deleteItem('${item}')">Delete</button>
+                <button class="edit" onclick="editItem(${item.id}, '${item.name}')">Edit</button>
+                <button class="delete" onclick="deleteItem(${item.id}, '${item.name}')">Delete</button>
             </div>
         `;
         list.appendChild(li);
     });
 }
 
-// 2. Toggle the History List on/off
 async function toggleHistory() {
     let list = document.getElementById('historyList');
     let btn = document.getElementById('historyBtn');
 
-    // If list has content, hide it
     if (list.innerHTML.trim() !== "") {
         list.innerHTML = "";
         btn.innerText = "View Change History";
     } else {
-        // If empty, fetch data and show it
         await fetchAndShowHistory();
         btn.innerText = "Hide Change History";
     }
 }
 
-// Helper: Fetch history data and draw it
 async function fetchAndShowHistory() {
     let list = document.getElementById('historyList');
     let response = await fetch('/api/history');
@@ -60,11 +53,10 @@ async function fetchAndShowHistory() {
     data.history.forEach(log => {
         let li = document.createElement('li');
         
-        // Color coding for different actions
         let color = 'black';
         if (log.action === 'ADDED') color = 'green';
         if (log.action === 'DELETED') color = 'red';
-        if (log.action === 'UPDATED') color = 'orange'; // New color for updates
+        if (log.action === 'UPDATED') color = 'orange'; 
         
         li.innerHTML = `
             <span style="color:${color}; font-weight:bold;">${log.action}</span>: 
@@ -75,9 +67,17 @@ async function fetchAndShowHistory() {
     });
 }
 
-// --- ACTION FUNCTIONS ---
+async function clearHistory() {
+    await fetch('/api/clear_history', { method: 'POST' });
+    
+    // Clear the list from the screen immediately
+    let list = document.getElementById('historyList');
+    let btn = document.getElementById('historyBtn');
+    
+    list.innerHTML = ""; // Make it vanish
+    btn.innerText = "View Change History"; // Reset the main button text
+}
 
-// 3. Add Item
 async function addItem() {
     let input = document.getElementById('newItemInput');
     let value = input.value;
@@ -93,40 +93,33 @@ async function addItem() {
     refreshAll();
 }
 
-// 4. Edit Item (NEW)
-async function editItem(oldName) {
-    // Popup asking for new name
+async function editItem(id, oldName) {
     let newName = prompt(`Change name of "${oldName}" to:`, oldName);
 
-    // If cancelled or empty, do nothing
     if (!newName || newName === oldName) return;
 
     await fetch('/api/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ old_name: oldName, new_name: newName })
+        // We now send the ID to identify the row, and names for logging
+        body: JSON.stringify({ id: id, old_name: oldName, new_name: newName })
     });
 
     refreshAll();
 }
 
-// 5. Delete Item
-async function deleteItem(item) {
-    //if(!confirm(`Are you sure you want to delete "${item}"?`)) return;
-
+async function deleteItem(id, name) {
+    // Direct delete using ID
     await fetch('/api/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ item: item })
+        body: JSON.stringify({ id: id, name: name })
     });
     refreshAll();
 }
 
-// Helper: Refreshes the main list AND history (if it's open)
 function refreshAll() {
     loadItems(); 
-    
-    // Check if history is currently open
     let historyList = document.getElementById('historyList');
     if (historyList.innerHTML.trim() !== "") {
         fetchAndShowHistory();

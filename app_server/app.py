@@ -22,12 +22,15 @@ def init_db():
 
 init_db()
 
+# --- ROUTES ---
+
 @app.route('/data', methods=['GET'])
 def get_data():
     conn = get_db_connection()
-    items = conn.execute('SELECT name FROM items').fetchall()
+    items = conn.execute('SELECT id, name FROM items').fetchall()
     conn.close()
-    return jsonify({"items": [row['name'] for row in items]})
+    # Now we send both ID and Name
+    return jsonify({"items": [{"id": row['id'], "name": row['name']} for row in items]})
 
 @app.route('/history', methods=['GET'])
 def get_history():
@@ -59,19 +62,19 @@ def add_data():
         conn.close()
     return jsonify({"status": "success"})
 
-# --- NEW UPDATE ROUTE ---
 @app.route('/update', methods=['POST'])
 def update_data():
-    old_name = request.json.get('old_name')
+    # We now look for the unique ID
+    item_id = request.json.get('id')
     new_name = request.json.get('new_name')
+    old_name = request.json.get('old_name') # Just for the history log
     
-    if old_name and new_name:
+    if item_id and new_name:
         conn = get_db_connection()
         
-        # 1. Update the item in the database
-        conn.execute('UPDATE items SET name = ? WHERE name = ?', (new_name, old_name))
+        # TARGETED UPDATE: Only update the specific row with this ID
+        conn.execute('UPDATE items SET name = ? WHERE id = ?', (new_name, item_id))
         
-        # 2. Log the change in history (showing "Old -> New")
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         log_message = f"{old_name} -> {new_name}"
         conn.execute('INSERT INTO history (action, item, timestamp) VALUES (?, ?, ?)', 
@@ -80,21 +83,33 @@ def update_data():
         conn.commit()
         conn.close()
     return jsonify({"status": "success"})
-# ------------------------
 
 @app.route('/delete', methods=['POST'])
 def delete_data():
-    item_to_delete = request.json.get('item')
-    if item_to_delete:
+    # We now look for the unique ID
+    item_id = request.json.get('id')
+    item_name = request.json.get('name') # Just for the history log
+
+    if item_id:
         conn = get_db_connection()
-        conn.execute('DELETE FROM items WHERE name = ?', (item_to_delete,))
+        
+        # TARGETED DELETE: Only delete the specific row with this ID
+        conn.execute('DELETE FROM items WHERE id = ?', (item_id,))
         
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         conn.execute('INSERT INTO history (action, item, timestamp) VALUES (?, ?, ?)', 
-                     ('DELETED', item_to_delete, now))
+                     ('DELETED', item_name, now))
         
         conn.commit()
         conn.close()
+    return jsonify({"status": "success"})
+
+@app.route('/clear_history', methods=['POST'])
+def clear_history():
+    conn = get_db_connection()
+    conn.execute('DELETE FROM history')
+    conn.commit()
+    conn.close()
     return jsonify({"status": "success"})
 
 if __name__ == '__main__':
