@@ -1,20 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Modern App</title>
+    <title>Inventory History</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <h1>Inventory Manager</h1>
-        
-        <ul id="itemList">
-            </ul>
 
         <div class="form-group">
             <input type="text" id="newItemInput" placeholder="Enter new item">
             <button onclick="addItem()">Add Item</button>
         </div>
+
+        <h3>Current Inventory</h3>
+        <ul id="itemList"></ul>
+
+        <hr>
+
+        <button id="historyBtn" onclick="toggleHistory()">View Change History</button>
+        <ul id="historyList">
+            </ul>
     </div>
 
     <script src="script.js"></script>

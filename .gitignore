@@ -7,3 +7,5 @@ __pycache__/
 
 # Docker environment variables (if you add secrets later)
 .env
+
+*.db
