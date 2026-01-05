@@ -1,0 +1,19 @@
+services:
+  # The Python API
+  backend:
+    build: ./app_server
+    ports:
+      - "5002:5000"
+
+  # The Nginx Web Server
+  web_server:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      # Use our custom config
+      - ./web_server/nginx.conf:/etc/nginx/nginx.conf
+      # Mount our HTML/CSS/JS folder so Nginx can serve it
+      - ./web_server/static:/usr/share/nginx/html
+    depends_on:
+      - backend
