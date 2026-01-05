@@ -1,6 +1,77 @@
-body { font-family: sans-serif; padding: 20px; background-color: #f4f4f4; }
-.container { background: white; padding: 20px; border-radius: 8px; max-width: 400px; margin: 0 auto; }
-ul { list-style-type: none; padding: 0; }
-li { background: #eee; margin: 5px 0; padding: 10px; display: flex; justify-content: space-between; }
-button { cursor: pointer; background: #007bff; color: white; border: none; padding: 5px 10px; }
+body { 
+    font-family: sans-serif; 
+    padding: 20px; 
+    background-color: #f4f4f4; 
+}
+
+.container { 
+    background: white; 
+    padding: 20px; 
+    border-radius: 8px; 
+    max-width: 500px; /* Made slightly wider to fit extra buttons */
+    margin: 0 auto; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+h1, h3 { text-align: center; }
+
+ul { 
+    list-style-type: none; 
+    padding: 0; 
+}
+
+li { 
+    background: #eee; 
+    margin: 5px 0; 
+    padding: 10px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    border-radius: 4px;
+}
+
+/* Button Container inside list items */
+.actions {
+    display: flex;
+    gap: 5px;
+}
+
+/* General Button Styles */
+button { 
+    cursor: pointer; 
+    background: #007bff; 
+    color: white; 
+    border: none; 
+    padding: 5px 10px; 
+    border-radius: 4px;
+}
+
+button:hover { background: #0056b3; }
+
+/* Specific Button Colors */
 button.delete { background: #dc3545; }
+button.delete:hover { background: #a71d2a; }
+
+button.edit { background: #ffc107; color: black; }
+button.edit:hover { background: #e0a800; }
+
+/* Input Form Styling */
+.form-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+input[type="text"] {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+#historyBtn {
+    width: 100%;
+    margin-top: 10px;
+    background-color: #6c757d;
+}
+#historyBtn:hover { background-color: #545b62; }
