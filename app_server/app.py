@@ -37,8 +37,37 @@ ITEM_COUNT_GAUGE = Gauge(
 )
 
 WRITE_BUCKETS = defaultdict(deque)
-DEFAULT_LOCATIONS = ["Warehouse A", "Warehouse B", "Retail Floor", "Receiving"]
-DEFAULT_CATEGORIES = ["Hardware", "Peripherals", "Networking", "Cables", "Office"]
+DEFAULT_LOCATIONS = [
+    "Warehouse A",
+    "Warehouse B",
+    "Warehouse C",
+    "Retail Floor",
+    "Receiving",
+    "Shipping Dock",
+    "Back Office",
+    "Repair Bench",
+    "Staging Area",
+    "Data Center Cage",
+    "Remote Site",
+    "Storage Room",
+]
+DEFAULT_CATEGORIES = [
+    "Hardware",
+    "Peripherals",
+    "Networking",
+    "Cables",
+    "Office",
+    "Servers",
+    "Laptops",
+    "Desktops",
+    "Monitors",
+    "Printers",
+    "Mobile Devices",
+    "Audio / Video",
+    "Security",
+    "Power",
+    "Accessories",
+]
 
 
 class APIError(Exception):

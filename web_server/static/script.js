@@ -10,8 +10,37 @@ const state = {
         direction: "desc",
     },
     metadata: {
-        categories: ["Hardware", "Peripherals", "Networking", "Cables", "Office"],
-        locations: ["Warehouse A", "Warehouse B", "Retail Floor", "Receiving"],
+        categories: [
+            "Hardware",
+            "Peripherals",
+            "Networking",
+            "Cables",
+            "Office",
+            "Servers",
+            "Laptops",
+            "Desktops",
+            "Monitors",
+            "Printers",
+            "Mobile Devices",
+            "Audio / Video",
+            "Security",
+            "Power",
+            "Accessories",
+        ],
+        locations: [
+            "Warehouse A",
+            "Warehouse B",
+            "Warehouse C",
+            "Retail Floor",
+            "Receiving",
+            "Shipping Dock",
+            "Back Office",
+            "Repair Bench",
+            "Staging Area",
+            "Data Center Cage",
+            "Remote Site",
+            "Storage Room",
+        ],
     },
     modalMode: "create",
 };
@@ -223,11 +252,40 @@ async function loadDashboard() {
         state.metadata.locations = payload.locations || [];
 
         if (!state.metadata.categories.length) {
-            state.metadata.categories = ["Hardware", "Peripherals", "Networking", "Cables", "Office"];
+            state.metadata.categories = [
+                "Hardware",
+                "Peripherals",
+                "Networking",
+                "Cables",
+                "Office",
+                "Servers",
+                "Laptops",
+                "Desktops",
+                "Monitors",
+                "Printers",
+                "Mobile Devices",
+                "Audio / Video",
+                "Security",
+                "Power",
+                "Accessories",
+            ];
         }
 
         if (!state.metadata.locations.length) {
-            state.metadata.locations = ["Warehouse A", "Warehouse B", "Retail Floor", "Receiving"];
+            state.metadata.locations = [
+                "Warehouse A",
+                "Warehouse B",
+                "Warehouse C",
+                "Retail Floor",
+                "Receiving",
+                "Shipping Dock",
+                "Back Office",
+                "Repair Bench",
+                "Staging Area",
+                "Data Center Cage",
+                "Remote Site",
+                "Storage Room",
+            ];
         }
 
         elements.totalItemsMetric.textContent = String(summary.total_items);
