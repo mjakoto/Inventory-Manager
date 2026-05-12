@@ -1,0 +1,29 @@
+groups:
+  - name: inventory-manager-alerts
+    rules:
+      - alert: InventoryBackendDown
+        expr: up{job="inventory-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: Inventory backend is down
+          description: The inventory backend has not responded for more than one minute.
+
+      - alert: InventoryHighErrorRate
+        expr: (sum(rate(inventory_http_errors_total[5m])) / sum(rate(inventory_http_requests_total[5m]))) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Inventory API error rate is elevated
+          description: More than five percent of requests are returning an error response.
+
+      - alert: InventoryLowStockDetected
+        expr: inventory_low_stock_items > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Inventory low-stock items detected
+          description: One or more inventory items are at or below their low-stock threshold.

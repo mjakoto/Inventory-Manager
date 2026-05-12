@@ -1,13 +1,13 @@
-FROM python:3.9-slim
+FROM python:3.11-slim
+
 WORKDIR /app
 
-# 1. Copy the text file into the container
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
 COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# 2. Install the libraries listed in that file
-RUN pip install -r requirements.txt
+COPY . .
 
-# 3. Copy the rest of your code
-COPY app.py .
-
-CMD ["python", "app.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "app:app"]

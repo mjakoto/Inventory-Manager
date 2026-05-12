@@ -1,18 +1,73 @@
 services:
   backend:
     build: ./app_server
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-change-me-for-production}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-inventory-admin}
+      DATABASE_PATH: /app/inventory.db
+      WRITE_RATE_LIMIT: ${WRITE_RATE_LIMIT:-30}
+      WRITE_RATE_WINDOW_SECONDS: ${WRITE_RATE_WINDOW_SECONDS:-60}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/readyz')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
     ports:
       - "5002:5000"
     volumes:
-      # FIX: Mount the directory, not the file
       - ./app_server:/app
 
   web_server:
-    image: nginx:alpine
+    image: nginx:1.27-alpine
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/healthz >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
     ports:
       - "8080:80"
     volumes:
-      - ./web_server/nginx.conf:/etc/nginx/nginx.conf
-      - ./web_server/static:/usr/share/nginx/html
+      - ./web_server/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./web_server/static:/usr/share/nginx/html:ro
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+      alertmanager:
+        condition: service_started
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+
+  grafana:
+    image: grafana/grafana:11.0.0
+    depends_on:
+      prometheus:
+        condition: service_started
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin123}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro

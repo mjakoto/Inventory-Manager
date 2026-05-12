@@ -1,28 +1,210 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Inventory Management</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Operations Console</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Inventory Manager</h1>
+    <div class="app-shell">
+        <header class="hero">
+            <div>
+                <p class="eyebrow">Inventory Operations Console</p>
+                <h1>Operate stock like a real internal platform.</h1>
+                <p class="hero-copy">
+                    Search inventory, catch low-stock risk early, and audit every change from a single dashboard.
+                </p>
+            </div>
 
-        <div class="form-group">
-            <input type="text" id="newItemInput" placeholder="Enter new item">
-            <button onclick="addItem()">Add Item</button>
+            <div class="status-panel">
+                <div class="status-row">
+                    <span class="status-label">Service health</span>
+                    <span id="serviceHealth" class="status-pill pending">Checking</span>
+                </div>
+                <div class="status-row">
+                    <span class="status-label">Readiness</span>
+                    <span id="readinessHealth" class="status-pill pending">Checking</span>
+                </div>
+                <div class="status-row">
+                    <span class="status-label">Access</span>
+                    <span id="authStateBadge" class="status-pill muted">Read only</span>
+                </div>
+            </div>
+        </header>
+
+        <section class="auth-section panel">
+            <div>
+                <h2>Admin Access</h2>
+                <p class="section-copy">Write actions are protected. Sign in to add, edit, delete, or clear history.</p>
+            </div>
+
+            <form id="loginForm" class="auth-form">
+                <input id="usernameInput" type="text" placeholder="Username" autocomplete="username">
+                <input id="passwordInput" type="password" placeholder="Password" autocomplete="current-password">
+                <button type="submit">Sign In</button>
+            </form>
+
+            <div id="authActions" class="auth-actions hidden">
+                <span id="authUserLabel" class="auth-user"></span>
+                <button id="logoutButton" class="ghost-button" type="button">Sign Out</button>
+            </div>
+        </section>
+
+        <section id="notification" class="notification hidden" aria-live="polite"></section>
+
+        <section class="dashboard-grid">
+            <article class="metric-card panel">
+                <p>Total SKUs</p>
+                <strong id="totalItemsMetric">0</strong>
+            </article>
+            <article class="metric-card panel">
+                <p>Total Units</p>
+                <strong id="totalUnitsMetric">0</strong>
+            </article>
+            <article class="metric-card panel">
+                <p>Low-Stock Alerts</p>
+                <strong id="lowStockMetric">0</strong>
+            </article>
+            <article class="metric-card panel">
+                <p>Sites Covered</p>
+                <strong id="locationsMetric">0</strong>
+            </article>
+        </section>
+
+        <section class="content-grid">
+            <div class="panel inventory-panel">
+                <div class="panel-header">
+                    <div>
+                        <p class="eyebrow">Inventory</p>
+                        <h2>Searchable asset inventory</h2>
+                    </div>
+                    <button id="openCreateModalButton" type="button">Add Item</button>
+                </div>
+
+                <div class="filters">
+                    <input id="searchInput" type="search" placeholder="Search name, SKU, category, location">
+                    <select id="categoryFilter">
+                        <option value="">All categories</option>
+                    </select>
+                    <select id="locationFilter">
+                        <option value="">All locations</option>
+                    </select>
+                    <select id="stockFilter">
+                        <option value="all">All stock states</option>
+                        <option value="low_stock">Low stock only</option>
+                        <option value="healthy">Healthy only</option>
+                    </select>
+                    <select id="sortFilter">
+                        <option value="updated_at">Sort by updated</option>
+                        <option value="name">Sort by name</option>
+                        <option value="sku">Sort by SKU</option>
+                        <option value="quantity">Sort by quantity</option>
+                        <option value="location">Sort by location</option>
+                        <option value="category">Sort by category</option>
+                    </select>
+                    <select id="directionFilter">
+                        <option value="desc">Newest first</option>
+                        <option value="asc">Oldest first</option>
+                    </select>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>SKU</th>
+                                <th>Qty</th>
+                                <th>Location</th>
+                                <th>Category</th>
+                                <th>Threshold</th>
+                                <th>Updated</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <aside class="side-stack">
+                <section class="panel restock-panel">
+                    <div class="panel-header compact">
+                        <div>
+                            <p class="eyebrow">Attention Queue</p>
+                            <h2>Needs restock</h2>
+                        </div>
+                        <button id="refreshDashboardButton" class="ghost-button" type="button">Refresh</button>
+                    </div>
+                    <ul id="lowStockList" class="alert-list"></ul>
+                </section>
+
+                <section class="panel history-panel">
+                    <div class="panel-header compact">
+                        <div>
+                            <p class="eyebrow">Audit Trail</p>
+                            <h2>Recent activity</h2>
+                        </div>
+                        <div class="history-actions">
+                            <button id="refreshHistoryButton" class="ghost-button" type="button">Reload</button>
+                            <button id="clearHistoryButton" class="danger-ghost" type="button">Clear</button>
+                        </div>
+                    </div>
+                    <ul id="historyList" class="history-list"></ul>
+                </section>
+            </aside>
+        </section>
+    </div>
+
+    <div id="itemModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div>
+                    <p class="eyebrow">Inventory Editor</p>
+                    <h2 id="modalTitle">Add Item</h2>
+                </div>
+                <button id="closeModalButton" class="ghost-button" type="button">Close</button>
+            </div>
+
+            <form id="itemForm" class="item-form">
+                <input id="itemIdInput" type="hidden">
+
+                <label>
+                    <span>Name</span>
+                    <input id="itemNameInput" type="text" required maxlength="80">
+                </label>
+
+                <label>
+                    <span>SKU</span>
+                    <input id="itemSkuInput" type="text" required maxlength="40">
+                </label>
+
+                <label>
+                    <span>Quantity</span>
+                    <input id="itemQuantityInput" type="number" min="0" required>
+                </label>
+
+                <label>
+                    <span>Low-stock threshold</span>
+                    <input id="itemThresholdInput" type="number" min="0" required>
+                </label>
+
+                <label>
+                    <span>Location</span>
+                    <select id="itemLocationInput" required></select>
+                </label>
+
+                <label>
+                    <span>Category</span>
+                    <select id="itemCategoryInput" required></select>
+                </label>
+
+                <div class="modal-actions">
+                    <button id="saveItemButton" type="submit">Save Item</button>
+                </div>
+            </form>
         </div>
-
-        <h3>Current Inventory</h3>
-        <ul id="itemList"></ul>
-
-        <hr>
-
-        <button id="historyBtn" onclick="toggleHistory()">View Change History</button>
-        <button id="clearHistoryBtn" onclick="clearHistory()">Clear History Log</button>
-        <ul id="historyList">
-        
-            </ul>
     </div>
 
     <script src="script.js"></script>
