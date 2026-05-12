@@ -1,3 +1,36 @@
+const DEFAULT_CATEGORIES = [
+    "Hardware",
+    "Peripherals",
+    "Networking",
+    "Cables",
+    "Office",
+    "Servers",
+    "Laptops",
+    "Desktops",
+    "Monitors",
+    "Printers",
+    "Mobile Devices",
+    "Audio / Video",
+    "Security",
+    "Power",
+    "Accessories",
+];
+
+const DEFAULT_LOCATIONS = [
+    "Warehouse A",
+    "Warehouse B",
+    "Warehouse C",
+    "Retail Floor",
+    "Receiving",
+    "Shipping Dock",
+    "Back Office",
+    "Repair Bench",
+    "Staging Area",
+    "Data Center Cage",
+    "Remote Site",
+    "Storage Room",
+];
+
 const state = {
     authenticated: false,
     username: null,
@@ -10,37 +43,8 @@ const state = {
         direction: "desc",
     },
     metadata: {
-        categories: [
-            "Hardware",
-            "Peripherals",
-            "Networking",
-            "Cables",
-            "Office",
-            "Servers",
-            "Laptops",
-            "Desktops",
-            "Monitors",
-            "Printers",
-            "Mobile Devices",
-            "Audio / Video",
-            "Security",
-            "Power",
-            "Accessories",
-        ],
-        locations: [
-            "Warehouse A",
-            "Warehouse B",
-            "Warehouse C",
-            "Retail Floor",
-            "Receiving",
-            "Shipping Dock",
-            "Back Office",
-            "Repair Bench",
-            "Staging Area",
-            "Data Center Cage",
-            "Remote Site",
-            "Storage Room",
-        ],
+        categories: [...DEFAULT_CATEGORIES],
+        locations: [...DEFAULT_LOCATIONS],
     },
     modalMode: "create",
 };
@@ -248,45 +252,14 @@ async function loadDashboard() {
     try {
         const payload = await api("/api/dashboard");
         const summary = payload.summary;
-        state.metadata.categories = payload.categories || [];
-        state.metadata.locations = payload.locations || [];
-
-        if (!state.metadata.categories.length) {
-            state.metadata.categories = [
-                "Hardware",
-                "Peripherals",
-                "Networking",
-                "Cables",
-                "Office",
-                "Servers",
-                "Laptops",
-                "Desktops",
-                "Monitors",
-                "Printers",
-                "Mobile Devices",
-                "Audio / Video",
-                "Security",
-                "Power",
-                "Accessories",
-            ];
-        }
-
-        if (!state.metadata.locations.length) {
-            state.metadata.locations = [
-                "Warehouse A",
-                "Warehouse B",
-                "Warehouse C",
-                "Retail Floor",
-                "Receiving",
-                "Shipping Dock",
-                "Back Office",
-                "Repair Bench",
-                "Staging Area",
-                "Data Center Cage",
-                "Remote Site",
-                "Storage Room",
-            ];
-        }
+        state.metadata.categories = uniqueValues([
+            ...DEFAULT_CATEGORIES,
+            ...(payload.categories || []),
+        ]);
+        state.metadata.locations = uniqueValues([
+            ...DEFAULT_LOCATIONS,
+            ...(payload.locations || []),
+        ]);
 
         elements.totalItemsMetric.textContent = String(summary.total_items);
         elements.totalUnitsMetric.textContent = String(summary.total_units);
