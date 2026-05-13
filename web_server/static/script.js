@@ -551,6 +551,7 @@ async function handleItemSubmit(event) {
                 method: "POST",
                 body: JSON.stringify(payload),
             });
+            resetInventoryFilters();
             notify("Inventory item created.", "success");
         } else {
             await api(`/api/items/${elements.itemIdInput.value}`, {
@@ -565,6 +566,22 @@ async function handleItemSubmit(event) {
     } catch (error) {
         notify(error.message, "error");
     }
+}
+
+function resetInventoryFilters() {
+    state.filters.search = "";
+    state.filters.category = "";
+    state.filters.location = "";
+    state.filters.stock_status = "all";
+    state.filters.sort = "updated_at";
+    state.filters.direction = "desc";
+
+    elements.searchInput.value = "";
+    elements.categoryFilter.value = "";
+    elements.locationFilter.value = "";
+    elements.stockFilter.value = "all";
+    elements.sortFilter.value = "updated_at";
+    elements.directionFilter.value = "desc";
 }
 
 async function handleDelete(item) {
