@@ -86,6 +86,9 @@
                         <select id="locationFilter">
                             <option value="">All locations</option>
                         </select>
+                        <select id="vendorFilter">
+                            <option value="">All vendors</option>
+                        </select>
                         <select id="stockFilter">
                             <option value="all">All stock states</option>
                             <option value="low_stock">Low stock only</option>
@@ -112,8 +115,10 @@
                                     <th>Name</th>
                                     <th>SKU</th>
                                     <th>Qty</th>
+                                    <th>Status</th>
                                     <th>Location</th>
                                     <th>Category</th>
+                                    <th>Vendor</th>
                                     <th>Threshold</th>
                                     <th>Updated</th>
                                     <th>Actions</th>
@@ -188,6 +193,11 @@
                 </label>
 
                 <label>
+                    <span>Vendor</span>
+                    <select id="itemVendorInput" required></select>
+                </label>
+
+                <label>
                     <span>Location</span>
                     <select id="itemLocationInput" required></select>
                 </label>
@@ -195,6 +205,21 @@
                 <label>
                     <span>Category</span>
                     <select id="itemCategoryInput" required></select>
+                </label>
+
+                <label>
+                    <span>Unit cost</span>
+                    <input id="itemUnitCostInput" type="number" min="0" step="0.01" required>
+                </label>
+
+                <label>
+                    <span>Serial number</span>
+                    <input id="itemSerialNumberInput" type="text" maxlength="80">
+                </label>
+
+                <label class="full-width">
+                    <span>Description</span>
+                    <input id="itemDescriptionInput" type="text" maxlength="200">
                 </label>
 
                 <div class="modal-actions">

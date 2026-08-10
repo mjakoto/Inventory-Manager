@@ -44,7 +44,11 @@ def create_sample_item(client, **overrides):
         "quantity": 2,
         "location": "Warehouse A",
         "category": "Networking",
-        "low_stock_threshold": 3,
+        "vendor": "Cisco",
+        "description": "Core branch router",
+        "serial_number": "SN-100",
+        "unit_cost": 499.99,
+        "reorder_point": 3,
     }
     payload.update(overrides)
     return client.post("/items", json=payload)
@@ -70,7 +74,11 @@ def test_create_update_delete_and_history_flow(client):
             "quantity": 1,
             "location": "Retail Floor",
             "category": "Networking",
-            "low_stock_threshold": 3,
+            "vendor": "Cisco",
+            "description": "Core branch router",
+            "serial_number": "SN-100",
+            "unit_cost": 499.99,
+            "reorder_point": 3,
         },
     )
     assert update_response.status_code == 200
@@ -97,7 +105,11 @@ def test_validation_rejects_invalid_payloads(client):
             "quantity": -4,
             "location": "",
             "category": "Hardware",
-            "low_stock_threshold": -1,
+            "vendor": "Dell",
+            "description": "",
+            "serial_number": "",
+            "unit_cost": -1,
+            "reorder_point": -1,
         },
     )
     assert response.status_code == 400
@@ -114,7 +126,11 @@ def test_search_filter_and_low_stock_dashboard(client):
         quantity=14,
         category="Peripherals",
         location="Warehouse B",
-        low_stock_threshold=2,
+        vendor="Dell",
+        description="Hot desk keyboard",
+        serial_number="SN-200",
+        unit_cost=59.99,
+        reorder_point=2,
     )
 
     search_response = client.get("/items?search=key")
@@ -132,6 +148,48 @@ def test_search_filter_and_low_stock_dashboard(client):
     dashboard_response = client.get("/dashboard")
     assert dashboard_response.status_code == 200
     assert dashboard_response.get_json()["summary"]["low_stock_count"] == 1
+
+
+def test_stock_actions_and_vendor_filter(client):
+    login(client)
+    create_response = create_sample_item(client)
+    item = create_response.get_json()["item"]
+
+    add_response = client.post(
+        f"/items/{item['id']}/stock-actions",
+        json={"action": "add", "quantity": 5, "note": "Received delivery"},
+    )
+    assert add_response.status_code == 200
+    assert add_response.get_json()["item"]["quantity"] == 7
+
+    remove_response = client.post(
+        f"/items/{item['id']}/stock-actions",
+        json={"action": "remove", "quantity": 2},
+    )
+    assert remove_response.status_code == 200
+    assert remove_response.get_json()["item"]["quantity"] == 5
+
+    adjust_response = client.post(
+        f"/items/{item['id']}/stock-actions",
+        json={"action": "adjust", "quantity": 11},
+    )
+    assert adjust_response.status_code == 200
+    adjusted_item = adjust_response.get_json()["item"]
+    assert adjusted_item["quantity"] == 11
+
+    transfer_response = client.post(
+        f"/items/{item['id']}/stock-actions",
+        json={"action": "transfer", "destination_location": "Data Center Cage"},
+    )
+    assert transfer_response.status_code == 200
+    transferred_item = transfer_response.get_json()["item"]
+    assert transferred_item["location"] == "Data Center Cage"
+
+    vendor_response = client.get("/items?vendor=Cisco")
+    assert vendor_response.status_code == 200
+    vendor_items = vendor_response.get_json()["items"]
+    assert len(vendor_items) == 1
+    assert vendor_items[0]["vendor"] == "Cisco"
 
 
 def test_health_ready_and_metrics_endpoints(client):

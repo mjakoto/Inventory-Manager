@@ -38,9 +38,9 @@ select {
 }
 
 .app-shell {
-    max-width: 1600px;
+    max-width: 1800px;
     margin: 0 auto;
-    padding: 28px 22px 40px;
+    padding: 22px 14px 36px;
 }
 
 .workspace-board h1,
@@ -52,7 +52,7 @@ select {
     background: linear-gradient(180deg, var(--board), var(--board-deep));
     border-radius: 56px;
     box-shadow: var(--shadow);
-    padding: 34px;
+    padding: 32px 28px;
 }
 
 .eyebrow {
@@ -401,12 +401,12 @@ tbody td {
 .stock-pill {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
     border-radius: 999px;
     padding: 5px 8px;
     font-size: 0.78rem;
     line-height: 1.1;
     font-weight: 700;
+    white-space: nowrap;
 }
 
 .stock-pill.healthy {
@@ -419,9 +419,23 @@ tbody td {
     color: var(--warning);
 }
 
+.stock-state {
+    min-width: 86px;
+    justify-content: center;
+}
+
+.quantity-cell {
+    font-weight: 700;
+}
+
 .row-actions button {
     min-height: 38px;
     padding: 0 12px;
+}
+
+.row-actions {
+    flex-wrap: nowrap;
+    align-items: center;
 }
 
 .alert-list,
@@ -515,9 +529,20 @@ tbody td {
     font-weight: 600;
 }
 
+.item-form .full-width {
+    grid-column: 1 / -1;
+}
+
 .item-form label span {
     color: var(--muted);
     font-size: 0.92rem;
+}
+
+.form-hint {
+    grid-column: 1 / -1;
+    margin: -2px 0 0;
+    color: var(--muted);
+    font-size: 0.88rem;
 }
 
 .modal-actions {
