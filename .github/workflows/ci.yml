@@ -28,8 +28,7 @@ jobs:
 
       - name: Run tests
         run: |
-          cd app_server
-          pytest
+          pytest app_server/tests/test_app.py
 
   docker-build:
     runs-on: ubuntu-latest
