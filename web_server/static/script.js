@@ -31,13 +31,25 @@ const DEFAULT_LOCATIONS = [
     "Storage Room",
 ];
 
+const DEFAULT_VENDORS = [
+    "CDW",
+    "Dell",
+    "Lenovo",
+    "Cisco",
+    "HP",
+    "Monoprice",
+    "Amazon Business",
+];
+
 const state = {
     authenticated: false,
     username: null,
+    activeItem: null,
     filters: {
         search: "",
         category: "",
         location: "",
+        vendor: "",
         stock_status: "all",
         sort: "updated_at",
         direction: "desc",
@@ -45,6 +57,7 @@ const state = {
     metadata: {
         categories: [...DEFAULT_CATEGORIES],
         locations: [...DEFAULT_LOCATIONS],
+        vendors: [...DEFAULT_VENDORS],
     },
     modalMode: "create",
 };
@@ -78,6 +91,7 @@ function cacheElements() {
         searchInput: document.getElementById("searchInput"),
         categoryFilter: document.getElementById("categoryFilter"),
         locationFilter: document.getElementById("locationFilter"),
+        vendorFilter: document.getElementById("vendorFilter"),
         stockFilter: document.getElementById("stockFilter"),
         sortFilter: document.getElementById("sortFilter"),
         directionFilter: document.getElementById("directionFilter"),
@@ -96,8 +110,12 @@ function cacheElements() {
         itemSkuInput: document.getElementById("itemSkuInput"),
         itemQuantityInput: document.getElementById("itemQuantityInput"),
         itemThresholdInput: document.getElementById("itemThresholdInput"),
+        itemVendorInput: document.getElementById("itemVendorInput"),
         itemLocationInput: document.getElementById("itemLocationInput"),
         itemCategoryInput: document.getElementById("itemCategoryInput"),
+        itemUnitCostInput: document.getElementById("itemUnitCostInput"),
+        itemSerialNumberInput: document.getElementById("itemSerialNumberInput"),
+        itemDescriptionInput: document.getElementById("itemDescriptionInput"),
     });
 }
 
@@ -125,6 +143,7 @@ function bindEvents() {
     for (const [element, filterKey] of [
         [elements.categoryFilter, "category"],
         [elements.locationFilter, "location"],
+        [elements.vendorFilter, "vendor"],
         [elements.stockFilter, "stock_status"],
         [elements.sortFilter, "sort"],
         [elements.directionFilter, "direction"],
@@ -260,6 +279,10 @@ async function loadDashboard() {
             ...DEFAULT_LOCATIONS,
             ...(payload.locations || []),
         ]);
+        state.metadata.vendors = uniqueValues([
+            ...DEFAULT_VENDORS,
+            ...(payload.vendors || []),
+        ]);
 
         elements.totalItemsMetric.textContent = String(summary.total_items);
         elements.totalUnitsMetric.textContent = String(summary.total_units);
@@ -268,8 +291,10 @@ async function loadDashboard() {
 
         renderFilterOptions(elements.categoryFilter, "All categories", state.metadata.categories);
         renderFilterOptions(elements.locationFilter, "All locations", state.metadata.locations);
+        renderFilterOptions(elements.vendorFilter, "All vendors", state.metadata.vendors);
         renderSelectOptions(elements.itemCategoryInput, state.metadata.categories);
         renderSelectOptions(elements.itemLocationInput, state.metadata.locations);
+        renderSelectOptions(elements.itemVendorInput, state.metadata.vendors);
         renderLowStockList(payload.low_stock_items || []);
     } catch (error) {
         notify(error.message, "error");
@@ -318,7 +343,14 @@ function renderFilterOptions(selectElement, defaultLabel, values) {
     });
 
     selectElement.value = values.includes(currentValue) ? currentValue : "";
-    state.filters[selectElement.id === "categoryFilter" ? "category" : "location"] = selectElement.value;
+    const filterKeyMap = {
+        categoryFilter: "category",
+        locationFilter: "location",
+        vendorFilter: "vendor",
+    };
+    if (filterKeyMap[selectElement.id]) {
+        state.filters[filterKeyMap[selectElement.id]] = selectElement.value;
+    }
 }
 
 function renderSelectOptions(selectElement, values) {
@@ -345,7 +377,7 @@ function renderInventoryTable(items) {
     if (!items.length) {
         const row = document.createElement("tr");
         const cell = document.createElement("td");
-        cell.colSpan = 8;
+        cell.colSpan = 10;
         cell.textContent = "No inventory items match the current filters.";
         row.appendChild(cell);
         elements.inventoryTableBody.appendChild(row);
@@ -356,10 +388,12 @@ function renderInventoryTable(items) {
         const row = document.createElement("tr");
         row.appendChild(createCellWithMarkup(item.name, item.category));
         row.appendChild(createTextCell(item.sku));
-        row.appendChild(createStockCell(item.quantity, item.is_low_stock));
+        row.appendChild(createQuantityCell(item.quantity));
+        row.appendChild(createStatusCell(item.is_low_stock));
         row.appendChild(createTextCell(item.location));
         row.appendChild(createTextCell(item.category));
-        row.appendChild(createTextCell(String(item.low_stock_threshold)));
+        row.appendChild(createTextCell(item.vendor));
+        row.appendChild(createTextCell(String(item.reorder_point)));
         row.appendChild(createTextCell(formatDate(item.updated_at)));
         row.appendChild(createActionCell(item));
         elements.inventoryTableBody.appendChild(row);
@@ -385,13 +419,18 @@ function createTextCell(value) {
     return cell;
 }
 
-function createStockCell(quantity, isLowStock) {
+function createQuantityCell(quantity) {
+    const cell = document.createElement("td");
+    cell.className = "quantity-cell";
+    cell.textContent = String(quantity);
+    return cell;
+}
+
+function createStatusCell(isLowStock) {
     const cell = document.createElement("td");
     const pill = document.createElement("span");
-    pill.className = `stock-pill ${isLowStock ? "low" : "healthy"}`;
-    pill.textContent = isLowStock
-        ? `${quantity} in stock | Below threshold`
-        : `${quantity} in stock | Healthy`;
+    pill.className = `stock-pill stock-state ${isLowStock ? "low" : "healthy"}`;
+    pill.textContent = isLowStock ? "At Risk" : "Healthy";
     cell.appendChild(pill);
     return cell;
 }
@@ -521,6 +560,7 @@ function openModal(mode, item = null) {
     }
 
     state.modalMode = mode;
+    state.activeItem = item;
     elements.modalTitle.textContent = mode === "create" ? "Add Item" : "Edit Item";
     elements.itemForm.reset();
 
@@ -529,15 +569,24 @@ function openModal(mode, item = null) {
         elements.itemNameInput.value = item.name;
         elements.itemSkuInput.value = item.sku;
         elements.itemQuantityInput.value = item.quantity;
-        elements.itemThresholdInput.value = item.low_stock_threshold;
+        elements.itemThresholdInput.value = item.reorder_point;
+        renderSelectOptions(elements.itemVendorInput, uniqueValues([...state.metadata.vendors, item.vendor]));
         renderSelectOptions(elements.itemLocationInput, uniqueValues([...state.metadata.locations, item.location]));
         renderSelectOptions(elements.itemCategoryInput, uniqueValues([...state.metadata.categories, item.category]));
+        elements.itemVendorInput.value = item.vendor;
         elements.itemLocationInput.value = item.location;
         elements.itemCategoryInput.value = item.category;
+        elements.itemUnitCostInput.value = item.unit_cost;
+        elements.itemSerialNumberInput.value = item.serial_number;
+        elements.itemDescriptionInput.value = item.description;
     } else {
         elements.itemIdInput.value = "";
         elements.itemQuantityInput.value = "0";
         elements.itemThresholdInput.value = "0";
+        elements.itemUnitCostInput.value = "0";
+        elements.itemSerialNumberInput.value = "";
+        elements.itemDescriptionInput.value = "";
+        renderSelectOptions(elements.itemVendorInput, state.metadata.vendors);
         renderSelectOptions(elements.itemLocationInput, state.metadata.locations);
         renderSelectOptions(elements.itemCategoryInput, state.metadata.categories);
     }
@@ -546,6 +595,7 @@ function openModal(mode, item = null) {
 }
 
 function closeModal() {
+    state.activeItem = null;
     elements.itemModal.classList.add("hidden");
 }
 
@@ -556,9 +606,13 @@ async function handleItemSubmit(event) {
         name: elements.itemNameInput.value.trim(),
         sku: elements.itemSkuInput.value.trim().toUpperCase(),
         quantity: Number(elements.itemQuantityInput.value),
-        low_stock_threshold: Number(elements.itemThresholdInput.value),
+        reorder_point: Number(elements.itemThresholdInput.value),
+        vendor: elements.itemVendorInput.value.trim(),
         location: elements.itemLocationInput.value.trim(),
         category: elements.itemCategoryInput.value.trim(),
+        unit_cost: Number(elements.itemUnitCostInput.value),
+        serial_number: elements.itemSerialNumberInput.value.trim(),
+        description: elements.itemDescriptionInput.value.trim(),
     };
 
     try {
@@ -570,11 +624,16 @@ async function handleItemSubmit(event) {
             resetInventoryFilters();
             notify("Inventory item created.", "success");
         } else {
-            await api(`/api/items/${elements.itemIdInput.value}`, {
+            const result = await api(`/api/items/${elements.itemIdInput.value}`, {
                 method: "PUT",
                 body: JSON.stringify(payload),
             });
-            notify("Inventory item updated.", "success");
+            if (!matchesActiveFilters(result.item)) {
+                resetInventoryFilters();
+                notify("Item saved. Filters were cleared so the updated item stays visible.", "success");
+            } else {
+                notify("Inventory item updated.", "success");
+            }
         }
 
         closeModal();
@@ -588,6 +647,7 @@ function resetInventoryFilters() {
     state.filters.search = "";
     state.filters.category = "";
     state.filters.location = "";
+    state.filters.vendor = "";
     state.filters.stock_status = "all";
     state.filters.sort = "updated_at";
     state.filters.direction = "desc";
@@ -595,9 +655,49 @@ function resetInventoryFilters() {
     elements.searchInput.value = "";
     elements.categoryFilter.value = "";
     elements.locationFilter.value = "";
+    elements.vendorFilter.value = "";
     elements.stockFilter.value = "all";
     elements.sortFilter.value = "updated_at";
     elements.directionFilter.value = "desc";
+}
+
+function matchesActiveFilters(item) {
+    const normalizedSearch = state.filters.search.trim().toLowerCase();
+    if (normalizedSearch) {
+        const searchableFields = [
+            item.name,
+            item.sku,
+            item.category,
+            item.location,
+            item.vendor,
+            item.description,
+            item.serial_number,
+        ];
+        const matchesSearch = searchableFields.some((value) =>
+            String(value || "").toLowerCase().includes(normalizedSearch)
+        );
+        if (!matchesSearch) {
+            return false;
+        }
+    }
+
+    if (state.filters.category && item.category !== state.filters.category) {
+        return false;
+    }
+    if (state.filters.location && item.location !== state.filters.location) {
+        return false;
+    }
+    if (state.filters.vendor && item.vendor !== state.filters.vendor) {
+        return false;
+    }
+    if (state.filters.stock_status === "low" && !item.is_low_stock) {
+        return false;
+    }
+    if (state.filters.stock_status === "healthy" && item.is_low_stock) {
+        return false;
+    }
+
+    return true;
 }
 
 async function handleDelete(item) {
