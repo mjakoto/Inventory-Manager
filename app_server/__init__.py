@@ -1,0 +1,1 @@
+"""Inventory Manager backend package."""
