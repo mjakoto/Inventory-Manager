@@ -389,7 +389,9 @@ function createStockCell(quantity, isLowStock) {
     const cell = document.createElement("td");
     const pill = document.createElement("span");
     pill.className = `stock-pill ${isLowStock ? "low" : "healthy"}`;
-    pill.textContent = `${quantity} ${isLowStock ? "At risk" : "Healthy"}`;
+    pill.textContent = isLowStock
+        ? `${quantity} in stock | Below threshold`
+        : `${quantity} in stock | Healthy`;
     cell.appendChild(pill);
     return cell;
 }
@@ -483,8 +485,16 @@ function formatHistoryDetails(details) {
         return details.message;
     }
 
-    if (details.quantity) {
+    if (details.quantity && typeof details.quantity === "object" && "from" in details.quantity && "to" in details.quantity) {
         return `Qty ${details.quantity.from} -> ${details.quantity.to}`;
+    }
+
+    if (
+        typeof details.quantity !== "undefined" &&
+        typeof details.location !== "undefined" &&
+        typeof details.category !== "undefined"
+    ) {
+        return `Qty ${details.quantity} | ${details.location} | ${details.category}`;
     }
 
     const keys = Object.keys(details);
@@ -494,7 +504,13 @@ function formatHistoryDetails(details) {
 
     return keys
         .slice(0, 2)
-        .map((key) => `${key}: ${details[key].from} -> ${details[key].to}`)
+        .map((key) => {
+            const value = details[key];
+            if (value && typeof value === "object" && "from" in value && "to" in value) {
+                return `${key}: ${value.from} -> ${value.to}`;
+            }
+            return `${key}: ${value}`;
+        })
         .join(", ");
 }
 

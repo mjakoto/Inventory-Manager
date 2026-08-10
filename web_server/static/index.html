@@ -8,153 +8,150 @@
 </head>
 <body>
     <div class="app-shell">
-        <header class="hero">
-            <div>
-                <p class="eyebrow">Inventory Operations Console</p>
-                <h1>Operate stock like a real internal platform.</h1>
-                <p class="hero-copy">
-                    Search inventory, catch low-stock risk early, and audit every change from a single dashboard.
-                </p>
-            </div>
-
-            <div class="status-panel">
-                <div class="status-row">
-                    <span class="status-label">Service health</span>
-                    <span id="serviceHealth" class="status-pill pending">Checking</span>
-                </div>
-                <div class="status-row">
-                    <span class="status-label">Readiness</span>
-                    <span id="readinessHealth" class="status-pill pending">Checking</span>
-                </div>
-                <div class="status-row">
-                    <span class="status-label">Access</span>
-                    <span id="authStateBadge" class="status-pill muted">Read only</span>
-                </div>
-            </div>
-        </header>
-
-        <section class="auth-section panel">
-            <div>
-                <h2>Admin Access</h2>
-                <p class="section-copy">Write actions are protected. Sign in to add, edit, delete, or clear history.</p>
-            </div>
-
-            <form id="loginForm" class="auth-form">
-                <input id="usernameInput" type="text" placeholder="Username" autocomplete="username">
-                <input id="passwordInput" type="password" placeholder="Password" autocomplete="current-password">
-                <button type="submit">Sign In</button>
-            </form>
-
-            <div id="authActions" class="auth-actions hidden">
-                <span id="authUserLabel" class="auth-user"></span>
-                <button id="logoutButton" class="ghost-button" type="button">Sign Out</button>
-            </div>
-        </section>
-
         <section id="notification" class="notification hidden" aria-live="polite"></section>
 
-        <section class="dashboard-grid">
-            <article class="metric-card panel">
-                <p>Total SKUs</p>
-                <strong id="totalItemsMetric">0</strong>
-            </article>
-            <article class="metric-card panel">
-                <p>Total Units</p>
-                <strong id="totalUnitsMetric">0</strong>
-            </article>
-            <article class="metric-card panel">
-                <p>Low-Stock Alerts</p>
-                <strong id="lowStockMetric">0</strong>
-            </article>
-            <article class="metric-card panel">
-                <p>Sites Covered</p>
-                <strong id="locationsMetric">0</strong>
-            </article>
-        </section>
-
-        <section class="content-grid">
-            <div class="panel inventory-panel">
-                <div class="panel-header">
-                    <div>
-                        <p class="eyebrow">Inventory</p>
-                        <h2>Searchable asset inventory</h2>
-                    </div>
-                    <button id="openCreateModalButton" type="button">Add Item</button>
+        <main class="workspace-board">
+            <header class="board-topbar">
+                <div class="brand-block">
+                    <p class="eyebrow">Inventory Workspace</p>
+                    <h1>Inventory manager</h1>
                 </div>
 
-                <div class="filters">
-                    <input id="searchInput" type="search" placeholder="Search name, SKU, category, location">
-                    <select id="categoryFilter">
-                        <option value="">All categories</option>
-                    </select>
-                    <select id="locationFilter">
-                        <option value="">All locations</option>
-                    </select>
-                    <select id="stockFilter">
-                        <option value="all">All stock states</option>
-                        <option value="low_stock">Low stock only</option>
-                        <option value="healthy">Healthy only</option>
-                    </select>
-                    <select id="sortFilter">
-                        <option value="updated_at">Sort by updated</option>
-                        <option value="name">Sort by name</option>
-                        <option value="sku">Sort by SKU</option>
-                        <option value="quantity">Sort by quantity</option>
-                        <option value="location">Sort by location</option>
-                        <option value="category">Sort by category</option>
-                    </select>
-                    <select id="directionFilter">
-                        <option value="desc">Newest first</option>
-                        <option value="asc">Oldest first</option>
-                    </select>
-                </div>
-
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>SKU</th>
-                                <th>Qty</th>
-                                <th>Location</th>
-                                <th>Category</th>
-                                <th>Threshold</th>
-                                <th>Updated</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="inventoryTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <aside class="side-stack">
-                <section class="panel restock-panel">
-                    <div class="panel-header compact">
-                        <div>
-                            <p class="eyebrow">Attention Queue</p>
-                            <h2>Needs restock</h2>
+                <div class="topbar-right">
+                    <div class="health-strip">
+                        <div class="health-chip">
+                            <span class="health-label">Service</span>
+                            <span id="serviceHealth" class="status-pill pending">Checking</span>
                         </div>
-                        <button id="refreshDashboardButton" class="ghost-button" type="button">Refresh</button>
+                        <div class="health-chip">
+                            <span class="health-label">Ready</span>
+                            <span id="readinessHealth" class="status-pill pending">Checking</span>
+                        </div>
+                        <div class="health-chip">
+                            <span class="health-label">Access</span>
+                            <span id="authStateBadge" class="status-pill muted">Read only</span>
+                        </div>
                     </div>
-                    <ul id="lowStockList" class="alert-list"></ul>
+
+                    <section class="auth-card">
+                        <form id="loginForm" class="auth-form">
+                            <input id="usernameInput" type="text" placeholder="Username" autocomplete="username">
+                            <input id="passwordInput" type="password" placeholder="Password" autocomplete="current-password">
+                            <button type="submit">Sign In</button>
+                        </form>
+
+                        <div id="authActions" class="auth-actions hidden">
+                            <span class="signed-in-copy">Signed in as</span>
+                            <span id="authUserLabel" class="auth-user"></span>
+                            <button id="logoutButton" class="ghost-button" type="button">Sign Out</button>
+                        </div>
+                    </section>
+                </div>
+            </header>
+
+            <section class="dashboard-grid">
+                <article class="metric-card metric-card-featured">
+                    <p>Total SKUs</p>
+                    <strong id="totalItemsMetric">0</strong>
+                </article>
+                <article class="metric-card">
+                    <p>Total Units</p>
+                    <strong id="totalUnitsMetric">0</strong>
+                </article>
+                <article class="metric-card">
+                    <p>Low-Stock Alerts</p>
+                    <strong id="lowStockMetric">0</strong>
+                </article>
+                <article class="metric-card">
+                    <p>Sites Covered</p>
+                    <strong id="locationsMetric">0</strong>
+                </article>
+            </section>
+
+            <section class="content-grid">
+                <section class="inventory-panel board-panel">
+                    <div class="panel-header inventory-header">
+                        <div>
+                            <p class="eyebrow">Inventory</p>
+                            <h2>All inventory items</h2>
+                        </div>
+                        <button id="openCreateModalButton" type="button">Add Item</button>
+                    </div>
+
+                    <div class="filters">
+                        <input id="searchInput" type="search" placeholder="Search name, SKU, category, location">
+                        <select id="categoryFilter">
+                            <option value="">All categories</option>
+                        </select>
+                        <select id="locationFilter">
+                            <option value="">All locations</option>
+                        </select>
+                        <select id="stockFilter">
+                            <option value="all">All stock states</option>
+                            <option value="low_stock">Low stock only</option>
+                            <option value="healthy">Healthy only</option>
+                        </select>
+                        <select id="sortFilter">
+                            <option value="updated_at">Sort by updated</option>
+                            <option value="name">Sort by name</option>
+                            <option value="sku">Sort by SKU</option>
+                            <option value="quantity">Sort by quantity</option>
+                            <option value="location">Sort by location</option>
+                            <option value="category">Sort by category</option>
+                        </select>
+                        <select id="directionFilter">
+                            <option value="desc">Newest first</option>
+                            <option value="asc">Oldest first</option>
+                        </select>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>SKU</th>
+                                    <th>Qty</th>
+                                    <th>Location</th>
+                                    <th>Category</th>
+                                    <th>Threshold</th>
+                                    <th>Updated</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTableBody"></tbody>
+                        </table>
+                    </div>
                 </section>
 
-                <section class="panel history-panel">
-                    <div class="panel-header compact">
-                        <div>
-                            <p class="eyebrow">Audit Trail</p>
-                            <h2>Recent activity</h2>
+                <aside class="side-stack">
+                    <section class="board-panel side-panel">
+                        <div class="panel-header compact">
+                            <div>
+                                <p class="eyebrow">Attention Queue</p>
+                                <h2>Needs restock</h2>
+                            </div>
+                            <button id="refreshDashboardButton" class="ghost-button" type="button">Refresh</button>
                         </div>
-                        <div class="history-actions">
-                            <button id="refreshHistoryButton" class="ghost-button" type="button">Reload</button>
-                            <button id="clearHistoryButton" class="danger-ghost" type="button">Clear</button>
+                        <ul id="lowStockList" class="alert-list"></ul>
+                    </section>
+
+                    <section class="board-panel side-panel">
+                        <div class="panel-header compact">
+                            <div>
+                                <p class="eyebrow">Audit Trail</p>
+                                <h2>Recent activity</h2>
+                            </div>
+                            <div class="history-actions">
+                                <button id="refreshHistoryButton" class="ghost-button" type="button">Reload</button>
+                                <button id="clearHistoryButton" class="danger-ghost" type="button">Clear</button>
+                            </div>
                         </div>
-                    </div>
-                    <ul id="historyList" class="history-list"></ul>
-                </section>
-            </aside>
-        </section>
+                        <ul id="historyList" class="history-list"></ul>
+                    </section>
+                </aside>
+            </section>
+        </main>
     </div>
 
     <div id="itemModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
